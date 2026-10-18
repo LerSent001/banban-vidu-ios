@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node start.js",
     "dev": "node --watch start.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "prepare:phone": "node prepare-device.js",
+    "start:phone": "node device-start.js"
   },
   "engines": {
     "node": ">=20"
