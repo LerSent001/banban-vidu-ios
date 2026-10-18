@@ -119,10 +119,11 @@ final class CharacterDraft: ObservableObject {
                     let (data, response) = try await URLSession.shared.data(from: url)
                     guard (response as? HTTPURLResponse)?.statusCode == 200 else { throw NSError(domain: "Scene", code: 2, userInfo: [NSLocalizedDescriptionKey: "场景图片下载失败，可继续获取"]) }
                     guard let picture = UIImage(data: data) else { throw NSError(domain: "Scene", code: 2, userInfo: [NSLocalizedDescriptionKey: "场景图片下载失败，可继续获取"]) }
-                    generated = picture
                     try picture.jpegData(compressionQuality: 0.9)?.write(to: Companion.directory.appendingPathComponent("pending-result.jpg"), options: .atomic)
+                    generated = picture
                     status = "场景已生成，确认后加入角色列表"; return
                 }
+                if state == "success" { throw NSError(domain: "Scene", code: 2, userInfo: [NSLocalizedDescriptionKey: "场景已完成，但图片暂不可用，请稍后继续获取"]) }
                 if state == "failed" { requestID = nil; try? FileManager.default.removeItem(at: draftFile); throw NSError(domain: "Scene", code: 3, userInfo: [NSLocalizedDescriptionKey: result["error"] as? String ?? "场景生成失败，可修改后重试"]) }
                 if state == "unknown" || state == "submitting" { throw NSError(domain: "Scene", code: 4, userInfo: [NSLocalizedDescriptionKey: "提交结果尚未确认，已保留任务记录，请勿重复创建。"]) }
                 guard Date() < deadline else { status = "场景仍在处理中，稍后可继续获取"; return }
@@ -135,8 +136,13 @@ final class CharacterDraft: ObservableObject {
             if failure.domain == "Scene" && [400, 401, 403, 413, 422].contains(failure.code) {
                 requestID = nil; try? saveDraft()
             }
-            self.error = error.localizedDescription
+            self.error = (error as? URLError)?.code == .timedOut ? "连接超时，任务已保留，请检查网络后继续获取" : error.localizedDescription
         }
+    }
+    func addGenerated(to room: RoomModel) throws {
+        guard let picture = generated else { throw NSError(domain: "Scene", code: 5, userInfo: [NSLocalizedDescriptionKey: "请等待场景生成完成"]) }
+        try room.addCharacter(name: name, scene: scene, picture: picture, voice: voice)
+        finish()
     }
     func finish() {
         for file in ["pending-draft.json", "pending-source.jpg", "pending-result.jpg"] { try? FileManager.default.removeItem(at: Companion.directory.appendingPathComponent(file)) }
@@ -228,6 +234,7 @@ struct NewCharacterView: View {
                     if draft.image != nil && draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                         Text("请先填写角色名字").font(.caption).foregroundStyle(.orange)
                     }
+                    if draft.generated == nil {
                     Button("使用原图加入角色列表") {
                         guard let picture = draft.image else { return }
                         do {
@@ -240,9 +247,10 @@ struct NewCharacterView: View {
                     }.buttonStyle(.borderedProminent).tint(.white).foregroundStyle(.black)
                         .disabled(draft.image == nil || draft.working || draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     Text("可直接使用原图，也可先生成专属场景。").font(.caption).foregroundStyle(.secondary)
+                    }
                     Button {
-                        if let picture = draft.generated {
-                            do { try room.addCharacter(name: draft.name, scene: draft.scene, picture: picture, voice: draft.voice); draft.finish(); dismiss(); onSaved() } catch { draft.error = "保存失败：" + error.localizedDescription }
+                        if draft.generated != nil {
+                            do { try draft.addGenerated(to: room); dismiss(); onSaved() } catch { draft.error = "保存失败：" + error.localizedDescription }
                         } else { Task { await draft.generate() } }
                     } label: {
                         Text(draft.generated != nil ? "加入角色列表" : draft.requestID != nil ? "继续获取场景" : "生成专属场景").font(.headline).foregroundStyle(.black).frame(maxWidth: .infinity).padding(17).background(.white, in: Capsule())

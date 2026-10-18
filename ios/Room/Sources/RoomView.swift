@@ -240,17 +240,6 @@ struct CharacterSettings: View {
                     }.disabled(room.busy)
                     Text("24 种声线 · 点击播放即可比较").font(.caption).foregroundStyle(.secondary)
                 }
-                Section("连接") {
-                    HStack {
-                        Text(room.serviceReady && room.pageReady ? "已连接，可以通话" : "尚未连接服务")
-                        Spacer()
-                        if room.checkingService { ProgressView() }
-                    }
-                    Button("重新检查连接") { room.refreshConnection() }
-                        .disabled(room.busy || room.checkingService)
-                    Text("请自行接入 Vidu 国内 API；本仓库不提供可用账号或公共服务。检查连接不会开始通话。").font(.caption).foregroundStyle(.secondary)
-                }
-                if let error = room.error { Section { Text(error).font(.caption).foregroundStyle(.orange) } }
             }.navigationTitle("角色设置").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .confirmationAction) { Button("完成") { room.saveProfile(); dismiss() } } }
                 .onChange(of: room.name) { _, _ in room.saveProfile() }
