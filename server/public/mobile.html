@@ -1,0 +1,155 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}video{width:100%;height:100%;object-fit:cover;background:transparent}</style></head><body><video id="remote" autoplay playsinline webkit-playsinline></video><script>
+(function(){
+window.__peerConnections=[];
+const gum=navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+navigator.mediaDevices.getUserMedia=async c=>{fetch('/api/diagnostics',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'rtc',detail:{capture:'start',audio:!!c.audio,video:!!c.video}})});try{const stream=await gum(c);fetch('/api/diagnostics',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'rtc',detail:{capture:'ready',tracks:stream.getTracks().map(t=>({kind:t.kind,label:t.label,settings:t.getSettings()}))}})});window.watchMic?.(stream);return stream}catch(e){fetch('/api/diagnostics',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'rtc',detail:{capture:'error',name:e.name,message:e.message}})});throw e}};
+const XO=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(method,url,...args){const target=new URL(url,location.href);if(target.protocol==='http:'&&target.hostname.endsWith('.alivecdn.com')){target.protocol='https:';url=target.href;}const endpoint=new URL(url,location.href).origin;this.addEventListener('loadend',()=>{if(!endpoint.includes('127.0.0.1'))fetch('/api/diagnostics',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'rtc',detail:{http:endpoint,status:this.status}})}).catch(()=>{})});return XO.call(this,method,url,...args)};
+const PC=window.RTCPeerConnection;
+window.RTCPeerConnection=class extends PC{constructor(...args){super(...args);window.__peerConnections.push(this);fetch('/api/diagnostics',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'rtc',detail:{peer:'created'}})});for(const event of ['iceconnectionstatechange','connectionstatechange'])this.addEventListener(event,()=>fetch('/api/diagnostics',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'rtc',detail:{peer:event,ice:this.iceConnectionState,connection:this.connectionState}})}).catch(()=>{}))}};
+const Base=window.WebSocket;window.WebSocket=class extends Base{constructor(url,protocols){super(url,...(protocols?[protocols]:[]));const endpoint=new URL(url).origin;for(const event of ['open','error','close'])this.addEventListener(event,e=>fetch('/api/diagnostics',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'rtc',detail:{socket:event,endpoint,code:e.code}})}).catch(()=>{}))}};})();
+</script><script src="/aliyun-rtc-sdk.js"></script><script src="/voice-playback.js"></script><script src="/control-connection.js"></script><script src="/audio-check.js"></script><script>
+const video=document.getElementById('remote');let current=null;
+const diagnostic=(event,detail={})=>fetch('/api/diagnostics',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event,detail})}).catch(()=>{});
+const post=(event,extra={})=>{window.webkit?.messageHandlers.room.postMessage({event,...extra});diagnostic(event,extra);};
+const status=message=>post('status',{message});
+const request=async(path,options={})=>{try{const r=await fetch(path,{signal:AbortSignal.timeout(options.method==='DELETE'?15000:65000),...options,headers:{'Content-Type':'application/json'}});const j=await r.json();if(!r.ok)throw Error(j.error||`请求失败 ${r.status}`);return j}catch(e){if(e.name==='TimeoutError'||e.name==='AbortError')throw Error('连接超时：本机服务未及时响应，请检查网络后再试。');throw e}};
+const deadline=(work,ms,message)=>{let timer;return Promise.race([work,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(message)),ms)})]).finally(()=>clearTimeout(timer));};
+let micTest=null,micMeter=null;
+window.watchMic=async stream=>{
+ if(micMeter){clearInterval(micMeter.timer);await micMeter.ctx.close().catch(()=>{});}
+ const ctx=new AudioContext(),source=ctx.createMediaStreamSource(stream),analyser=ctx.createAnalyser();analyser.fftSize=1024;source.connect(analyser);await ctx.resume();
+ const buffer=new Float32Array(analyser.fftSize);let peak=0,ticks=0;
+ const timer=setInterval(()=>{analyser.getFloatTimeDomainData(buffer);const rms=Math.sqrt(buffer.reduce((a,x)=>a+x*x,0)/buffer.length);peak=Math.max(peak,rms);window.webkit?.messageHandlers.room.postMessage({event:'micLevel',level:Math.min(1,rms*8),rms});if(++ticks%25===0){diagnostic('media',{micRMS:rms,micPeak:peak,device:stream.getAudioTracks()[0]?.label});peak=0;}},100);
+ micMeter={ctx,timer};
+};
+window.stopMicTest=async()=>{micTest?.getTracks().forEach(t=>t.stop());micTest=null;if(micMeter){clearInterval(micMeter.timer);await micMeter.ctx.close().catch(()=>{});micMeter=null;}post('micTest',{active:false});};
+window.testMicrophone=async()=>{try{await window.stopMicTest();micTest=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false});post('micTest',{active:true});}catch(e){post('error',{message:'麦克风无法采集：'+e.message});}};
+window.setSpeaker=value=>{video.muted=!value;for(const a of document.querySelectorAll('audio'))a.muted=!value;current?.engine?.muteAllRemoteAudioPlaying?.(!value);};
+window.startCall=async (payload,options={})=>{
+ if(current)return;
+ await window.stopMicTest();
+ const s={ended:false,preview:payload.call_mode==='audio',nativeSpeech:options.nativeSpeech===true};current=s;
+ try{
+  status('检查麦克风…');
+  if(!navigator.mediaDevices?.getUserMedia)throw Error('当前模拟器不支持麦克风采集，请用真机体验通话。');
+  const Engine=window.AliRtcEngine;
+  if(!Engine?.getInstance)throw Error('音视频组件加载失败');
+  const support=await Engine.isSupported();if(!support.support)throw Error('音视频组件不支持当前模拟器，请使用 iPhone 真机。');
+  if(s.ended)return;
+  const engine=s.engine=Engine.getInstance();
+  await engine.publishLocalVideoStream(false);
+  await engine.publishLocalAudioStream(false);
+  if(!s.preview&&!s.nativeSpeech)await Promise.race([engine.startAudioCapture(),new Promise((_,reject)=>setTimeout(()=>reject(Error('麦克风启动超时，请结束后重试')),15000))]);
+  status('正在准备人物图片…');
+  let asset=await request('/api/avatar/assets',{method:'POST',body:JSON.stringify({image_uri:payload.avatar.image_uri,name:payload.avatar.name})});
+  const preparationDeadline=Date.now()+360000;
+  while(!['success','SUCCESS',11].includes(asset.status)){
+   if(s.ended)return;
+   if(['failed','FAILED',12].includes(asset.status))throw Error('人物图片处理失败，请更换图片后重试');
+   if(Date.now()>preparationDeadline)throw Error('人物图片仍在云端处理中，请稍后再试。尚未创建通话。');
+   status(asset.status==='created'?'人物图片正在排队…':'正在准备人物形象…');
+   await new Promise(r=>setTimeout(r,3000));
+   asset=await request('/api/avatar/assets/'+asset.id);
+  }
+  if(s.ended)return;
+  payload.avatar.id=asset.id;delete payload.avatar.image_uri;
+  status('正在创建人物会话…');
+  payload.request_id ??= crypto.randomUUID();
+  const data=await request('/api/avatar/lives',{method:'POST',body:JSON.stringify(payload)});
+  s.data=data;post('session',{id:data.live.id});
+  if(s.ended){await request('/api/avatar/lives/'+encodeURIComponent(data.live.id),{method:'DELETE'});return;}
+  await new Promise((resolve,reject)=>{
+   s.rejectReady=reject;
+   const ws=s.ws=window.createControlConnection(data);
+   s.timer=setTimeout(()=>reject(Error('人物连接超时，请稍后重试。')),65000);
+   ws.onmessage=e=>{
+    if(s.ended)return;const m=JSON.parse(e.data);
+    if(m.event==='on_live'){clearTimeout(s.timer);resolve();}
+    if(m.event==='not_ready')status('人物正在进入房间…');
+    if(m.event==='fatal'||m.event==='remote_closed'||m.event==='server_hangup'){
+     const error=m.reason==='idle_timeout'?'暂时没有收到你的声音，通话已结束':(m.message||m.reason||'通话连接已结束');reject(Error(error));if(s.joined){post('error',{message:error});window.endCall();}
+    }
+    if(m.event==='text_sent')post('textSent');
+    if(m.event==='action_error'){post('textFailed');post('error',{message:m.message});}
+    // Keep explicit upstream transcripts internal; the native call UI has no subtitles.
+    const p=m.message?.payload;
+    const transcript=p?.audio_transcript||p?.transcription||p?.user_audio_text||p?.avatar_audio_text||([9,10].includes(m.message?.type)?p?.text_msg:null);
+    if(transcript?.text||transcript?.content)post('transcript',{text:transcript.text||transcript.content});
+   };
+   ws.onerror=()=>reject(Error('人物信令连接失败'));
+   ws.onclose=()=>{if(!s.ended){reject(Error('连接已断开'));if(s.joined){post('error',{message:'连接已断开'});window.endCall();}}};
+  });
+  if(s.ended)return;
+  status('正在连接声音与画面…');
+  engine.on('videoSubscribeStateChanged',(uid,oldState,newState)=>{
+   if(!s.ended&&newState===3&&/^live-(bot|video-push)-/.test(uid)){engine.setRemoteViewConfig(video,uid,1);video.play().catch(e=>{if(e.name==='NotAllowedError')post('error',{message:'请点击画面启用播放'})});}
+  });
+  engine.on('screenShareSubscribeStateChanged',(uid,oldState,newState)=>{
+   if(!s.ended&&newState===3&&/^live-(bot|video-push)-/.test(uid)){engine.setRemoteViewConfig(video,uid,2);video.play().catch(()=>{});}
+  });
+  engine.on('bye',()=>{if(!s.ended){post('error',{message:'音视频通话已结束'});window.endCall();}});
+  engine.on('authInfoExpired',()=>{post('error',{message:'通话凭证已到期'});window.endCall();});
+  if(s.nativeSpeech){
+   const playback=s.playback=new VoicePlayback(active=>{if(!s.ended)post('remoteSpeaking',{active});});
+   // Read incoming RTP energy directly; this needs no second microphone or AudioContext.
+   const previous=new Map();let polling=false;
+   s.playbackMeter=setInterval(async()=>{
+    if(s.ended||polling)return;polling=true;
+    try{
+     let level=0;
+     for(const pc of window.__peerConnections.filter(pc=>pc.connectionState!=='closed')){
+      const stats=await pc.getStats();
+      stats.forEach(report=>{
+       if(report.type!=='inbound-rtp'||(report.kind||report.mediaType)!=='audio')return;
+       const old=previous.get(report.id);
+       if(old&&report.totalSamplesDuration>old.duration){
+        level=Math.max(level,Math.sqrt(Math.max(0,(report.totalAudioEnergy-old.energy)/(report.totalSamplesDuration-old.duration))));
+       }else level=Math.max(level,Number(report.audioLevel)||0);
+       previous.set(report.id,{energy:report.totalAudioEnergy,duration:report.totalSamplesDuration});
+      });
+     }
+     if(!s.ended)playback.sample(level);
+    }catch{}finally{polling=false;}
+   },100);
+  }
+  for(const event of ['audioSubscribeStateChanged','videoSubscribeStateChanged','remoteTrackAvailableNotify','connectionStatusChange','error','rtcRemoteAudioStats','rtcRemoteVideoStats','rtcLocalAudioStats'])engine.on(event,(...args)=>diagnostic('rtc',{event,args}));
+  s.joinTask=deadline((async()=>{
+   await engine.setChannelProfile('communication');
+   await engine.setAudioOnlyMode(s.preview);
+   await engine.publishLocalVideoStream(false);
+   await engine.setDefaultSubscribeAllRemoteAudioStreams(true);
+   await engine.setDefaultSubscribeAllRemoteVideoStreams(true);
+   if(s.ended)return;
+   await engine.joinChannel(data.rtc.token,data.rtc.user_id);
+   if(s.ended)return;
+   await engine.publishLocalAudioStream(!s.preview&&!s.nativeSpeech);
+  })(),30000,'音视频连接超时，已停止等待。请稍后重试。');
+  await s.joinTask;if(s.ended)return;s.joined=true;
+  s.stats=setInterval(()=>{diagnostic('media',{videoTime:video.currentTime,width:video.videoWidth,height:video.videoHeight,frames:video.getVideoPlaybackQuality?.().totalVideoFrames,tracks:[...(video.srcObject?.getTracks?.()||[])].map(t=>({kind:t.kind,muted:t.muted,readyState:t.readyState}))});},5000);
+  post('connected');status(s.preview?'正在试听音色…':'已连接，等待人物画面…');
+  if(s.preview){window.sendText('请只说：你好，我在这里。今天有什么想和我分享的吗？');s.previewTimer=setTimeout(()=>window.endCall(),14000);}
+  if(!s.preview)s.frameTimeout=setTimeout(()=>{if(!s.hasVideo){post('error',{message:'未收到人物视频，已结束本次连接'});window.endCall()}},45000);
+ }catch(e){if(!s.ended){post('error',{message:e.message});await window.endCall();}}
+};
+video.onplaying=()=>{if(current&&!current.ended){current.hasVideo=true;clearTimeout(current.frameTimeout);post('video');status('正在通话');}};
+video.onclick=()=>video.play();
+window.sendText=content=>{if(current?.joined&&!current.ended&&current.ws?.readyState===1){current.ws.send(JSON.stringify({action:'text',content}));return true;}return false;};
+window.setMuted=async mute=>{try{if(!current?.nativeSpeech)await current?.engine?.publishLocalAudioStream(!mute);post('muted',{value:mute})}catch(e){post('error',{message:e.message})}};
+window.endCall=async()=>{
+ const s=current;if(!s){post('ended');return;}if(s.ended)return;s.ended=true;
+ clearTimeout(s.previewTimer);clearTimeout(s.timer);clearTimeout(s.frameTimeout);clearInterval(s.stats);clearInterval(s.playbackMeter);s.rejectReady?.(Error('已结束'));
+ if(s.ws?.readyState===1)s.ws.send(JSON.stringify({action:'hangup'}));s.ws?.close();
+ // Explicit cancellation handles sessions whose control socket was not yet connected.
+ let reloadRequired=false;
+ const cleanup=(async()=>{
+  if(s.data)await request('/api/avatar/lives/'+encodeURIComponent(s.data.live.id),{method:'DELETE'}).catch(()=>{});
+  await s.joinTask?.catch(()=>{});
+  for(const name of ['stopPreview','leaveChannel','destroy']){try{await s.engine?.[name]?.()}catch{}}
+  await window.stopMicTest();
+ })();
+ try{await deadline(cleanup,8000,'结束连接超时')}catch{reloadRequired=true;}
+ video.srcObject=null;if(current===s)current=null;post('ended',{reloadRequired});
+};
+window.addEventListener('pagehide',()=>window.endCall());
+post('ready',{secureContext:window.isSecureContext,mediaCapture:!!navigator.mediaDevices?.getUserMedia,origin:location.origin,voiceInput:'native-dictation-v1'});
+</script></body></html>

@@ -1,0 +1,10 @@
+node_modules/
+.env*
+!.env.example
+.build*/
+artifacts/
+server/.model-cache/
+ios/Room/Resources/DeviceConfig.json
+**/xcuserdata/
+.DS_Store
+*.log

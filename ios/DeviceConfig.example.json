@@ -1,0 +1,5 @@
+{
+  "baseURL": "https://your-own-backend.example",
+  "token": "REPLACE_WITH_YOUR_OWN_DEVICE_TOKEN",
+  "trustMode": "system"
+}

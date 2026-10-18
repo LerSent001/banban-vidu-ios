@@ -1,0 +1,20 @@
+{
+  "name": "banban-vidu-ios",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "SwiftUI Vidu digital companion demo; bring your own API key",
+  "scripts": {
+    "start": "node start.js",
+    "dev": "node --watch start.js",
+    "test": "node --test test/*.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "https-proxy-agent": "^7.0.6",
+    "undici": "^7.30.0",
+    "ws": "^8.18.0"
+  }
+}

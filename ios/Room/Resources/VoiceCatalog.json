@@ -1,0 +1,218 @@
+[
+  {
+    "id": "Katerina",
+    "name": "卡捷琳娜",
+    "detail": "御姐 · 成熟有韵律",
+    "gender": "女声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9f7c.mp3",
+    "sampleFile": "Katerina.mp3"
+  },
+  {
+    "id": "Mione",
+    "name": "米欧娜",
+    "detail": "知性 · 从容姐姐",
+    "gender": "女声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9c83.mp3",
+    "sampleFile": "Mione.mp3"
+  },
+  {
+    "id": "Maia",
+    "name": "四月",
+    "detail": "知性 · 温柔姐姐",
+    "gender": "女声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9f76.mp3",
+    "sampleFile": "Maia.mp3"
+  },
+  {
+    "id": "Momo",
+    "name": "茉兔",
+    "detail": "二次元软萌 · 撒娇俏皮",
+    "gender": "女声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9c8b.mp3",
+    "sampleFile": "Momo.mp3"
+  },
+  {
+    "id": "Qiao",
+    "name": "小乔妹",
+    "detail": "萌系甜妹 · 活泼有个性",
+    "gender": "女声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9f74.mp3",
+    "sampleFile": "Qiao.mp3"
+  },
+  {
+    "id": "Angel",
+    "name": "安琪",
+    "detail": "甜软 · 轻台式口音",
+    "gender": "女声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9c89.mp3",
+    "sampleFile": "Angel.mp3"
+  },
+  {
+    "id": "Cindy",
+    "name": "林欣宜",
+    "detail": "软糯 · 台湾口音",
+    "gender": "女声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9f78.mp3",
+    "sampleFile": "Cindy.mp3"
+  },
+  {
+    "id": "Tina",
+    "name": "甜甜",
+    "detail": "甜暖 · 奶茶感",
+    "gender": "女声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9f79.mp3",
+    "sampleFile": "Tina.mp3"
+  },
+  {
+    "id": "Serena",
+    "name": "苏瑶",
+    "detail": "温柔 · 日常陪伴",
+    "gender": "女声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9f77.mp3",
+    "sampleFile": "Serena.mp3"
+  },
+  {
+    "id": "Liora Mira",
+    "name": "清欢",
+    "detail": "轻柔 · 治愈陪伴",
+    "gender": "女声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9f7f.mp3",
+    "sampleFile": "Liora-Mira.mp3"
+  },
+  {
+    "id": "Sunnybobi",
+    "name": "知芝",
+    "detail": "自然 · 邻家姑娘",
+    "gender": "女声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20260323/flkiue/czr-f1818_%E7%9F%A5%E8%8A%9D_Sunnybobi.wav",
+    "sampleFile": "Sunnybobi.wav"
+  },
+  {
+    "id": "Mia",
+    "name": "乖小妹",
+    "detail": "轻柔 · 慢生活",
+    "gender": "女声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9f72.mp3",
+    "sampleFile": "Mia.mp3"
+  },
+  {
+    "id": "Harvey",
+    "name": "厚",
+    "detail": "低沉成熟 · 霸总风格参考",
+    "gender": "男声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20260323/hwrbqc/m905_%E5%8E%9A_Harvey.wav",
+    "sampleFile": "Harvey.wav"
+  },
+  {
+    "id": "Andre",
+    "name": "安德雷",
+    "detail": "沉稳磁性 · 成熟男主参考",
+    "gender": "男声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9c90.mp3",
+    "sampleFile": "Andre.mp3"
+  },
+  {
+    "id": "Evan",
+    "name": "江晨",
+    "detail": "年下 · 奶狗男友感",
+    "gender": "男声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9f75.mp3",
+    "sampleFile": "Evan.mp3"
+  },
+  {
+    "id": "Ethan",
+    "name": "晨煦",
+    "detail": "阳光 · 温暖少年感",
+    "gender": "男声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://help-static-aliyun-doc.aliyuncs.com/file-manage-files/zh-CN/20260323/mharwp/m02_%E6%99%A8%E7%85%A6_Ethan.wav",
+    "sampleFile": "Ethan.wav"
+  },
+  {
+    "id": "Theo Calm",
+    "name": "予安",
+    "detail": "温柔 · 治愈学长感",
+    "gender": "男声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9f70.mp3",
+    "sampleFile": "Theo-Calm.mp3"
+  },
+  {
+    "id": "Li Cassian",
+    "name": "云策",
+    "detail": "克制 · 冷静男主参考",
+    "gender": "男声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9c88.mp3",
+    "sampleFile": "Li-Cassian.mp3"
+  },
+  {
+    "id": "Raymond",
+    "name": "林川野",
+    "detail": "清亮 · 宅系少年感",
+    "gender": "男声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9f7e.mp3",
+    "sampleFile": "Raymond.mp3"
+  },
+  {
+    "id": "Ryan",
+    "name": "甜茶",
+    "detail": "戏感 · 情绪张力",
+    "gender": "男声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9f73.mp3",
+    "sampleFile": "Ryan.mp3"
+  },
+  {
+    "id": "Aiden",
+    "name": "艾登",
+    "detail": "清爽 · 邻家大男孩",
+    "gender": "男声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9c8c.mp3",
+    "sampleFile": "Aiden.mp3"
+  },
+  {
+    "id": "Lenn",
+    "name": "莱恩",
+    "detail": "理性 · 冷静青年",
+    "gender": "男声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9c9c.mp3",
+    "sampleFile": "Lenn.mp3"
+  },
+  {
+    "id": "Alek",
+    "name": "阿列克",
+    "detail": "冷峻 · 外冷内暖",
+    "gender": "男声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9c9f.mp3",
+    "sampleFile": "Alek.mp3"
+  },
+  {
+    "id": "Emilien",
+    "name": "埃米尔安",
+    "detail": "浪漫 · 温柔哥哥",
+    "gender": "男声",
+    "provider": "qwen_omni",
+    "sampleURL": "https://g-adoc.alcasset.com/media/maas_docs/sfm-cn/common/audios/6a4b3c2d1e0f9ca3.mp3",
+    "sampleFile": "Emilien.mp3"
+  }
+]

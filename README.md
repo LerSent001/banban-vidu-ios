@@ -1,0 +1,51 @@
+# 伴伴 · Vidu iOS 数字人 Demo
+
+SwiftUI 数字人界面与 Vidu 国内 API 接口示例。**需要自行申请并配置 Vidu（api.vidu.cn）API Key。仓库不提供账号、额度或可用的公共后端，也不会连接作者的私人服务。**
+
+未配置 API 时，可以查看三个演示角色、使用原图新增、编辑删除角色和播放内置音色样音。实时通话、场景生成不可用；配置后调用 Vidu 会按自己的账户计费。API Key 只放服务端，不能放进 iOS App。
+
+## 已包含
+
+- 小夏、星野、陆川三个演示角色。
+- 新增角色：选图、起名后可直接加入；专属场景生成为可选步骤。
+- 音色匹配失败不会阻止新增，支持手动选音色；公开版使用默认音色建议，不依赖额外 AI 服务。
+- 未完成的场景可保存并恢复；不存在的任务沿用原编号恢复提交；不自动重建提交结果未知的付费任务。
+- 列表左上角「编辑」可删除角色。默认角色小夏始终保留，删除当前角色后自动切回默认角色。
+- 中文语音识别、实时通话控制、音色试听和前置摄像头小窗。
+
+## 本地启动
+
+需要 macOS、Xcode（iOS 17+）和 Node.js 20+、pnpm。
+
+```sh
+cp .env.example .env.local
+# 编辑 .env.local，填写你自己的 VIDU_API_KEY
+cd server
+pnpm install --frozen-lockfile
+pnpm start
+```
+
+然后打开 `ios/BedroomRoom.xcodeproj`，选择 iPhone 模拟器运行。模拟器访问本机 `127.0.0.1:8787`。首次允许麦克风与语音识别权限。
+
+如果不配置 Key，也可以启动服务浏览本地界面；付费接口会提示缺少配置。
+
+## 真机接入
+
+本地示例默认只监听回环地址。真机需要自己部署可访问的 HTTPS 后端，保留这里的 `/mobile`、`/api/avatar/*` HTTP 与 WebSocket 接口，并启用设备鉴权（服务工厂支持 `clientToken`）。
+
+将 `ios/DeviceConfig.example.json` 复制到 `ios/Room/Resources/DeviceConfig.json`，填写自己的后端 HTTPS 地址与设备令牌，再在 Xcode 中加入资源、选择自己的签名团队并编译。该文件已被 Git 忽略。Vidu Key 必须由自己的后端保存；设备令牌不是 Vidu Key。未配置真机地址时会使用不可解析的占位域名。
+
+未附带作者的云端部署、转发服务或证书。相机画面只在本机预览。
+
+## 验证范围
+
+```sh
+cd server
+pnpm test
+```
+
+服务测试使用模拟上游，不产生 Vidu 费用。iOS 模拟器已验证新增保存、删除回退、默认角色保护、未完成任务恢复；生图链路使用模拟返回检查，不代表真实付费生图或真机通话已经验收。模拟器的音频行为可能与真机不同。
+
+## 资源与来源
+
+服务端基于盛数官方 Vidu 示例，原许可证保留在 `server/UPSTREAM-LICENSE`。Aliyun RTC SDK、音色样音及演示图片不由本仓库授予额外的商业使用权；替换成有权使用的素材后再用于自己的产品。接口以 [Vidu 国内平台](https://platform.vidu.cn/) 文档为准。
